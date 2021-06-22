@@ -1,4 +1,4 @@
 CC=gcc
 media: media.c
-	$(CC) media.c -o media
+	$(CC) media.c -o media -l bcm2835
 

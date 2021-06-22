@@ -76,7 +76,17 @@ We want to make a Raspberry Pi 0 act as a media controller so we can connect but
 
 This is described in the links below.
 
+### media.c
 media.c is currently sending the media key bites. The report_desc defines each key we want to use. Then each media key becomes a bit in `report`, in the order they were defined. Eg, the first key defined is NEXT_TRACK. So sending bit 1 skips to the next track. The second key is PREV_TRACK, sent as the next bit: 2, or 0b00000010.
+
+To install GPIO library:
+- `wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz`
+- `tar -xf bcm2835-1.68.tar.gz`
+- `cd bcm2835` or whatever it's called :)
+- `./configure`
+- `make`
+- `sudo make check`
+- `sudo make install`
 
 To build media.c: `$ make`
 
