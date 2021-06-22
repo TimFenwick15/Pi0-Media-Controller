@@ -80,6 +80,8 @@ media.c is currently sending the media key bites. The report_desc defines each k
 
 To build media.c: `$ make`
 
+For `media`, or the test scripts to run, they will need to be run with sudo.
+
 ## Connecting to Computer Log
 Check if the Pi has been recognised by the host with: `$ dmesg -w`
 
