@@ -1,4 +1,5 @@
 CC=gcc
-media: media.c
-	$(CC) media.c -o media -l bcm2835
+OBJS=src/rotary_encoder.c src/media.c
+media: $(OBJS)
+	$(CC) $^ -o media -l bcm2835
 

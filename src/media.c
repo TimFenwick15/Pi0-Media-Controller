@@ -10,11 +10,12 @@
 #include <unistd.h>  // Imports open, write, and close
 #include <fcntl.h>   // Imports O_WRONLY
 #include <bcm2835.h> // Imports GPIO functions
+#include "rotary_encoder.h"
 
 /*
  * GPIO 2 and 3 have fixed pull up resistors.
  */
-#define PIN_NEXT_TRACK RPI_BPLUS_GPIO_J8_07 // Pin 7  GPIO4, not GPIO7 in this numbering
+#define PIN_NEXT_TRACK RPI_BPLUS_GPIO_J8_07 // Pin 07 GPIO4, not GPIO7 in this numbering
 #define PIN_PREV_TRACK RPI_BPLUS_GPIO_J8_29 // Pin 29 GPIO5
 #define PIN_STOP       RPI_BPLUS_GPIO_J8_31 // Pin 31 GPIO6
 #define PIN_PLAY_PAUSE RPI_BPLUS_GPIO_J8_26 // Pin 27 GPIO7
@@ -23,6 +24,10 @@
 #define PIN_VOL_DOWN   RPI_BPLUS_GPIO_J8_19 // Pin 19 GPIO10
 #define PIN_EXIT       RPI_BPLUS_GPIO_J8_23 // Pin 23 GPIO11
 #define PIN_LED        RPI_BPLUS_GPIO_J8_32 // Pin 32 GPIO12
+
+#define PIN_ENCODER_A  RPI_BPLUS_GPIO_J8_33 // Pin 33 GPIO13
+#define PIN_ENCODER_B  RPI_BPLUS_GPIO_J8_08 // Pin 08 GPIO14
+#define PIN_ENCODER_C  RPI_BPLUS_GPIO_J8_10 // Pin 10 GPIO15
 
 #define REPORT_LENGTH (1)
 
@@ -54,6 +59,7 @@ int main(void)
         printf("Failed to initialise bcm2835 GPIO module\n");
         return 1;
     }
+    ROTARY_ENCODER_vInit(PIN_ENCODER_A, PIN_ENCODER_B, PIN_ENCODER_C);
 
     printf("Begin\n");
     setLED(true);
@@ -71,6 +77,8 @@ int main(void)
                 write(hid, report, REPORT_LENGTH);
             }
         }
+        ROTARY_ENCODER_sGetData();
+
         usleep(50 * 1000); // Debounce. sleep for 50 milliseconds
     }
 
@@ -78,6 +86,8 @@ int main(void)
     setLED(false);
 
     close(hid);
+
+    system("shutdown -h now");
     return 0;
 }
 
