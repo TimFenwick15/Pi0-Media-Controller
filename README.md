@@ -105,6 +105,14 @@ The following output was reported for me:
 [288576.292403] hid-generic 0003:1D6B:0104.001A: input,hidraw0: USB HID v1.01 Device [HID 1d6b:0104] on usb-0000:00:14.0-2/input0
 ```
 
+## To dos
+- Choose GPIO for other controls: have a rotary encoder, joystick, button+LED
+- Map each of these to a media function: play/pause, vol up, vol down, mute (encoder clcik perhaps), next track, previous track
+- Could I add a microphone mute?
+- Install media.c, and run it on startup
+- Pi power management. For now, a power off button. Button that runs a script containing a shutdown command
+- Perhaps make an OS for this task in Buildroot. I've tried setting up a USB gadget in Buildroot before with no success. The eLinux link looked useful though
+
 ## Links
 Working with RPi and SD cards on Linux: https://www.thirtythreeforty.net/posts/2020/01/mastering-embedded-linux-part-3-buildroot/
 
@@ -128,4 +136,6 @@ Two versions of the USB org documentation:
 Kernel documentation that sends you to usb.org: https://www.kernel.org/doc/Documentation/ABI/testing/configfs-usb-gadget
 
 Might be useful for setting this up properly: https://www.elinux.org/images/e/ef/USB_Gadget_Configfs_API_0.pdf
+
+Pi GPIO in C library: http://www.airspayce.com/mikem/bcm2835/
 

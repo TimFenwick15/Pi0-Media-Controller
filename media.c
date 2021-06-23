@@ -10,7 +10,7 @@
 #include <fcntl.h>   // Imports O_WRONLY
 #include <bcm2835.h> // Imports GPIO functions
 
-#define PIN RPI_GPIO_P1_15
+#define PIN RPI_GPIO_P1_15 // Pin 15 (GPIO22), NOT GPIO15
 #define REPORT_LENGTH (1)
 
 typedef enum
@@ -64,7 +64,7 @@ int main(void)
 teMedia getKey(void)
 {
     teMedia eResult = eMEDIA_NO_KEY;
-    if (bcm2835_gpio_lev(PIN))
+    if (bcm2835_gpio_lev(PIN)) // Pulling down, so 0 means unpressed, 1 means pressed
     {
         eResult = eMEDIA_MUTE;
     }
