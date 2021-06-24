@@ -13,8 +13,8 @@ typedef struct _m_tsEdgePattern
 
 m_tsEdgePattern m_sEdgePattern;
 
-void (*m_pvUpCallback)(void);// = null;
-void (*m_pvDownCallback)(void);// = null;
+void (*m_pvUpCallback)(void);
+void (*m_pvDownCallback)(void);
 uint8_t m_u8AHandle;
 uint8_t m_u8BHandle;
 

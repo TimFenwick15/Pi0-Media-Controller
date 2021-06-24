@@ -12,10 +12,12 @@ echo "libcomposite" | tee -a /etc/modules
 touch /usr/bin/isticktoit_usb
 chmod +x /usr/bin/isticktoit_usb
 
-# Add this line to /etc/rc.local above the exit 0 (uncomment the line first)
+# Add thses lines to /etc/rc.local above the exit 0 (uncomment the line first)
 # /usr/bin/isticktoit_usb # libcomposite configuration
+# /usr/bin/media
 
-cp isticktoit_usb /usr/bin/isticktoit_usb
+cp bin/isticktoit_usb /usr/bin/isticktoit_usb
+cp bin/media_keys /usr/bin
 
 echo Done, now reboot
 

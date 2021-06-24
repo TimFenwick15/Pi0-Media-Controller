@@ -4,29 +4,29 @@ Download 'Raspberry Pi OS Lite' from: https://www.raspberrypi.org/software/opera
 
 Unzip this.
 
-Run `$ dmesg -w`
+Run `dmesg -w`
 
-Insert an SD card into reader
+Insert an SD card into reader.
 
-Check the SD card device name. For me, `/dev/sdb`
+Check the SD card device name. For me, `/dev/sdb`.
 
-dd is dangerous because if you point it at the wrong drive, it will happily overwrite it with whatever you send it. Using of=/dev/sda instead of of=/dev/sdb would brick your machine. Make sure you are happy with what the command will do before running.
+**dd is dangerous because if you point it at the wrong drive, it will happily overwrite it with whatever you send it. Using of=/dev/sda instead of of=/dev/sdb would brick your machine. Make sure you are happy with what the command will do before running.**
 
-Clear the SD card: `$ sudo dd if=/dev/zero of=/dev/sdb bs=1M status=progress`
+Clear the SD card: `sudo dd if=/dev/zero of=/dev/sdb bs=1M status=progress`.
 
-Write the OS image: `$ sudo dd if=[name of OS .img file] of=/dev/sdb bs=1M status=progress`
+Write the OS image: `sudo dd if=[name of OS .img file] of=/dev/sdb bs=1M status=progress`.
 
 I had to boot the Pi once before I could see the SD card contents on my computer, not sure why. We ideall want to do the following before booting the Pi.
 
-RFKILL may block your Wifi on first boot. I tried editing /media/[username]/boot/cmdline.txt. Add to the end fo the line: `systemd.restore_state=0 rfkill.default_state=1`
+RFKILL may block your Wifi on first boot. I tried editing `/media/[username]/boot/cmdline.txt`. Add to the end fo the line: `systemd.restore_state=0 rfkill.default_state=1`
 
-`$ rfkill list all` showed Wifi unblocked.
+`rfkill list all` showed Wifi unblocked.
 
-Edit /media/[username]/boot/config.txt. Add to the end of the file: `enable_uart=1`
+Edit `/media/[username]/boot/config.txt`. Add to the end of the file: `enable_uart=1`.
 
-Run: `$ touch /media/[username]/boot/ssh`
+Run: `touch /media/[username]/boot/ssh`
 
-Run before removing card: `$ sync`
+Run before removing card: `sync`
 
 ### Serial console
 Initially connected to the Pi over serial. I have an FTDI breakout connected to computer with pins:
@@ -34,11 +34,11 @@ Initially connected to the Pi over serial. I have an FTDI breakout connected to 
 - AD1 connected to Pi pin 8 (serial TX)
 - AD0 connected to Pi pin 10 (serial RX)
 
-The FTDI breakout was on USB0, so: `$ screen /dev/ttyUSB0 115200`
+The FTDI breakout was on USB0, so: `screen /dev/ttyUSB0 115200`.
 
 Then power on the Pi to get a shell.
 
-Login with username pi, password raspberry. Change the password with: `$ passwd`
+Login with username pi, password raspberry. Change the password with: `passwd`
 
 ### Get ssh access
 On the Pi, edit `/etc/wpa_supplicant/wpa_supplicant.conf`
@@ -58,26 +58,19 @@ interface wlan0
 static routers=[IP of your router]
 ```
 
-Reboot: `$ sudo reboot now`
+Reboot: `sudo reboot now`
 
-You should now have SSH access. You might catch the Pi IP in the boot text in your serial console. Otherwise, login again and run: `$ ifconfig`. The IP address should be visible under the wlan0 heading.
+You should now have SSH access. You might catch the Pi IP in the boot text in your serial console. Otherwise, login again and run: `ifconfig`. The IP address should be visible under the wlan0 heading.
 
 ### Setup Pi
-Run `$ sudo apt-get update && sudo apt-get upgrade`
+Run `sudo apt-get update && sudo apt-get upgrade`
 
-Then follow the instructions in setup.py. It's intended to be copied to the Pi and run, but there's a line that needs adding (the comment about adding a line above exit 0)
+Then follow the instructions in setup.py. It's intended to be copied to the Pi and run, but there are two lines that need adding to rc.local manually.
 
-## Making the Pi 0 a USB HID consumer device
-HID (human interface device) is a standard for USB devices such as keyboards, defining the codes that translate to keypresses.
+`isticktoit_usb` is a shell script, and `media_keys` is a binary of the latest source, built on a Raspberry Pi 0 on Raspberry Pi OS Buster.
 
-Any media keys on a keyboard are sent as a 'consumer' device, not as keyboard keys.
-
-We want to make a Raspberry Pi 0 act as a media controller so we can connect buttons and a rotary encoder to control music/video etc.
-
-This is described in the links below.
-
-### media.c
-media.c is currently sending the media key bites. The report_desc defines each key we want to use. Then each media key becomes a bit in `report`, in the order they were defined. Eg, the first key defined is NEXT_TRACK. So sending bit 1 skips to the next track. The second key is PREV_TRACK, sent as the next bit: 2, or 0b00000010.
+### Install GPIO library
+This repends on bcm2835. This will need to built and installed before running.
 
 To install GPIO library:
 - `wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz`
@@ -88,12 +81,28 @@ To install GPIO library:
 - `sudo make check`
 - `sudo make install`
 
-To build media.c: `$ make`
+### Build this repo from source
+The report_desc defines each key we want to use. Then each media key becomes a bit in `report`, in the order they were defined. Eg, the first key defined is NEXT_TRACK. So sending bit 1 skips to the next track. The second key is PREV_TRACK, sent as the next bit: 2, or 0b00000010.
 
-For `media`, or the test scripts to run, they will need to be run with sudo.
+The GPIO library will need to be installed in the previous step before starting.
+
+To build this repo, run `make` from the repo directory.
+
+Then run `sudo make install` to copy `media_keys` to `/usr/bin`.
+
+If running `media_keys` manually, it will need to be run with `sudo`.
+
+## Making the Pi 0 a USB HID consumer device
+HID (human interface device) is a standard for USB devices such as keyboards, defining the codes that translate to keypresses.
+
+Any media keys on a keyboard are sent as a 'consumer' device, not as keyboard keys.
+
+We want to make a Raspberry Pi 0 act as a media controller so we can connect buttons and a rotary encoder to control music/video etc.
+
+This is described in the links below.
 
 ## Connecting to Computer Log
-Check if the Pi has been recognised by the host with: `$ dmesg -w`
+Check if the Pi has been recognised by the host with: `dmesg -w`
 
 Then plug in the Pi.
 
@@ -106,10 +115,7 @@ The following output was reported for me:
 ```
 
 ## To dos
-- Choose GPIO for other controls: have a rotary encoder, joystick, button+LED
-- Map each of these to a media function: play/pause, vol up, vol down, mute (encoder clcik perhaps), next track, previous track
 - Could I add a microphone mute?
-- Install media.c, and run it on startup
 - Pi power management. For now, a power off button. Button that runs a script containing a shutdown command
 - Perhaps make an OS for this task in Buildroot. I've tried setting up a USB gadget in Buildroot before with no success. The eLinux link looked useful though
 

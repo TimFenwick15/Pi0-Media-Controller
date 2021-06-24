@@ -1,4 +1,5 @@
 #include <stdio.h>   // Imports printf
+#include <stdlib.h>  // Imports system
 #include <stdint.h>  // Imports uint8_t like types
 #include <stdbool.h> // Imports true, false, bool
 #include <unistd.h>  // Imports usleep
