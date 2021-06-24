@@ -1,66 +1,90 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <bcm2835.h>
+#include <stdint.h>
 #include <stdbool.h>
+#include "gpio.h"
 #include "rotary_encoder.h"
 
 typedef struct _m_tsEdgePattern
 {
     bool bAHigh;
     bool bBHigh;
-    bool bCHigh;
 } m_tsEdgePattern;
 
-ROTARY_ENCODER_tsData m_sData;
 m_tsEdgePattern m_sEdgePattern;
-uint32_t m_u32PinA;
-uint32_t m_u32PinB;
-uint32_t m_u32PinC;
 
-void ROTARY_ENCODER_vInit(uint32_t pinA, uint32_t pinB, uint32_t pinC)
+void (*m_pvUpCallback)(void);// = null;
+void (*m_pvDownCallback)(void);// = null;
+uint8_t m_u8AHandle;
+uint8_t m_u8BHandle;
+
+bool ROTARY_ENCODER_bInit(void* pvUpCallback, void* pvDownCallback)
 {
-    m_sData.buttonPress = false;
-    m_sData.positionChange = 0;
-    m_sEdgePattern.bAHigh = false;
-    m_sEdgePattern.bBHigh = false;
-    m_sEdgePattern.bCHigh = false;
+    bool bResult = false;
+    if (GPIO_bRegisterInputPin(&m_u8AHandle) && GPIO_bRegisterInputPin(&m_u8BHandle))
+    {
+        bResult = true;
+    }
 
-    m_u32PinA = pinA;
-    m_u32PinB = pinB;
-    m_u32PinC = pinC;
+    m_sEdgePattern.bAHigh = GPIO_bGetInputPinState(m_u8AHandle);
+    m_sEdgePattern.bBHigh = GPIO_bGetInputPinState(m_u8BHandle);
 
-    bcm2835_gpio_fsel(pinA, BCM2835_GPIO_FSEL_INPT);
-    bcm2835_gpio_set_pud(pinA, BCM2835_GPIO_PUD_DOWN);
-    bcm2835_gpio_fsel(pinB, BCM2835_GPIO_FSEL_INPT);
-    bcm2835_gpio_set_pud(pinB, BCM2835_GPIO_PUD_DOWN);
-    bcm2835_gpio_fsel(pinC, BCM2835_GPIO_FSEL_INPT);
-    bcm2835_gpio_set_pud(pinC, BCM2835_GPIO_PUD_DOWN);
+    m_pvUpCallback = pvUpCallback;
+    m_pvDownCallback = pvDownCallback;
+
+    return bResult;
 }
 
-ROTARY_ENCODER_tsData ROTARY_ENCODER_sGetData(void)
+void ROTARY_ENCODER_vPoll(void)
 {
     m_tsEdgePattern sPreviousEdgePattern = {
         m_sEdgePattern.bAHigh,
-        m_sEdgePattern.bBHigh,
-        m_sEdgePattern.bCHigh,
+        m_sEdgePattern.bBHigh
     };
 
-    m_sEdgePattern.bAHigh = (bool)bcm2835_gpio_lev(m_u32PinA);
-    m_sEdgePattern.bBHigh = (bool)bcm2835_gpio_lev(m_u32PinB);
-    m_sEdgePattern.bCHigh = (bool)bcm2835_gpio_lev(m_u32PinC);
+    m_sEdgePattern.bAHigh = GPIO_bGetInputPinState(m_u8AHandle);
+    m_sEdgePattern.bBHigh = GPIO_bGetInputPinState(m_u8BHandle);
 
-    if (m_sEdgePattern.bAHigh != sPreviousEdgePattern.bAHigh)
+    // Forward patterns
+    if (
+        (!sPreviousEdgePattern.bAHigh && m_sEdgePattern.bAHigh && !m_sEdgePattern.bBHigh) || // A 0 -> 1, B is 0
+        (sPreviousEdgePattern.bAHigh && !m_sEdgePattern.bAHigh && m_sEdgePattern.bBHigh)  || // A 1 -> 0, B is 1
+        (!sPreviousEdgePattern.bBHigh && m_sEdgePattern.bBHigh && m_sEdgePattern.bAHigh)  || // B 0 -> 1, A is 1
+        (sPreviousEdgePattern.bBHigh && !m_sEdgePattern.bBHigh && !m_sEdgePattern.bAHigh)    // B 1 -> 0, A is 0
+    )
     {
-        printf("A edge %d\n", m_sEdgePattern.bAHigh);
+        m_pvUpCallback();
     }
-    if (m_sEdgePattern.bBHigh != sPreviousEdgePattern.bBHigh)
+    // Backwards patterns
+    else if (
+        (!sPreviousEdgePattern.bAHigh && m_sEdgePattern.bAHigh && m_sEdgePattern.bBHigh)  || // A 0 -> 1, B is 1
+        (sPreviousEdgePattern.bAHigh && !m_sEdgePattern.bAHigh && !m_sEdgePattern.bBHigh) || // A 1 -> 0, B is 0
+        (!sPreviousEdgePattern.bBHigh && m_sEdgePattern.bBHigh && !m_sEdgePattern.bAHigh) || // B 0 -> 1, A is 0
+        (sPreviousEdgePattern.bBHigh && !m_sEdgePattern.bBHigh && m_sEdgePattern.bAHigh)     // B 1 -> 0, A is 1
+    )
     {
-        printf("B edge %d\n", m_sEdgePattern.bAHigh);
+        m_pvDownCallback();
     }
-    if (m_sEdgePattern.bCHigh != sPreviousEdgePattern.bCHigh)
+    // No update
+    else if ((sPreviousEdgePattern.bAHigh == m_sEdgePattern.bAHigh) &&
+        (sPreviousEdgePattern.bBHigh == m_sEdgePattern.bBHigh))
     {
-        printf("C edge %d\n", m_sEdgePattern.bAHigh);
+
     }
-    return m_sData;
+    // We might have missed an edge. May need a reset
+    else
+    {
+        printf("Unknown edge pattern\n");
+    }
+    /*
+    if ((sPreviousEdgePattern.bAHigh != m_sEdgePattern.bAHigh) ||
+        (sPreviousEdgePattern.bBHigh != m_sEdgePattern.bBHigh))
+    {
+        printf("A %d to %d, B %d to %d\n",
+            sPreviousEdgePattern.bAHigh,
+            m_sEdgePattern.bAHigh,
+            sPreviousEdgePattern.bBHigh,
+            m_sEdgePattern.bBHigh);
+    }
+    */
 }
-
