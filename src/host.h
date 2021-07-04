@@ -5,7 +5,6 @@ typedef enum
 {
     HOST_eNEXT_TRACK = 0,
     HOST_ePREV_TRACK,
-    HOST_eSTOP,
     HOST_ePLAY_PAUSE,
     HOST_eMUTE,
     HOST_eVOL_UP,

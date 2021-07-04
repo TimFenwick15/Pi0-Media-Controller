@@ -5,4 +5,5 @@ media_keys: $(OBJS)
 
 install: media_keys
 	cp bin/$^ /usr/bin
+	cp bin/isticktoit_usb /usr/bin
 
