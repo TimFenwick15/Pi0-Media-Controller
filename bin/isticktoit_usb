@@ -10,16 +10,17 @@ BASE=${CONFIGS_HOME}/usb_gadget/${GADGET_NAME}
 
 mkdir -p ${BASE}/
 cd ${BASE}/
-echo 0x1d6b > idVendor
-echo 0x0104 > idProduct
+echo 0x1d6b > idVendor # Linux Foundation
+echo 0x0104 > idProduct # Multifunction Composite Gadget
 
 mkdir -p ${BASE}/configs/${NAME}.${NUMBER}/
 mkdir -p ${BASE}/functions/${FUNC_NAME}.${INSTANCE_NAME}/
 cd ${BASE}/functions/${FUNC_NAME}.${INSTANCE_NAME}/
-echo 0 > protocol
-echo 0 > subclass
-echo 1 > report_length
-echo -ne \\x05\\x0c\\x09\\x01\\xa1\\x01\\x15\\x00\\x25\\x01\\x75\\x01\\x95\\x04\\x09\\xb5\\x09\\xb6\\x09\\xcd\\x09\\xe2\\x81\\x06\\x95\\x02\\x09\\xe9\\x09\\xea\\x81\\x02\\x95\\x02\\x81\\x01\\xc0 > report_desc
+echo 1 > protocol
+echo 1 > subclass
+echo 8 > report_length
+
+echo -ne \\x05\\x0C\\x09\\x01\\xA1\\x01\\x15\\x00\\x26\\xFF\\x03\\x19\\x00\\x2A\\xFF\\x03\\x95\\x04\\x75\\x10\\x81\\x00\\xC0 > report_desc
 
 cd ${BASE}/
 ln -s functions/${FUNC_NAME}.${INSTANCE_NAME} configs/${NAME}.${NUMBER}

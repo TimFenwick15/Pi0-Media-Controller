@@ -1,0 +1,8 @@
+#!/bin/bash
+#echo -ne \\x00\\xe2 > /dev/hidg0
+#echo -ne \\x00e2 > /dev/hidg0
+sleep 2
+echo -ne \\x23\\x02\\x00\\x00\\x00\\x00\\x00\\x00 > /dev/hidg0
+echo -ne \\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00 > /dev/hidg0
+echo $?
+
